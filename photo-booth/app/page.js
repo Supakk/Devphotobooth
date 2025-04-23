@@ -24,7 +24,7 @@ export default function HomePage() {
             { src: "/image/keroppi.png", alt: "Keroppi" },
             { src: "/image/chococat.png", alt: "Chococat" },
             { src: "/image/kuromi.png", alt: "Kuromi" },
-            { src: "/image/kitty.png", alt: "Hello Kitty" },
+            { src: "/image/Badtz-Maru.png", alt: "Hello Kitty" },
             { src: "/image/Pochacco.png", alt: "Pochacco" },
           ].map((item, index) => (
             <li key={index} className="relative">

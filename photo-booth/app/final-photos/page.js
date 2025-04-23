@@ -1,66 +1,81 @@
+// app/final-photos/page.js
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import PhotoPreview from '../../components/PhotoPreview';
-import FilterSelector from '../../components/FilterSelector';
+import { useEffect } from 'react';
+import Image from 'next/image';
+import { usePhotoBoothContext } from '../../context/PhotoBoothContext';
 
 export default function FinalPhotosPage() {
   const router = useRouter();
-  const [capturedImages, setCapturedImages] = useState([]);
-  const [selectedLayout, setSelectedLayout] = useState(null);
-  const [selectedFilter, setSelectedFilter] = useState(null);
+  const { capturedImages, selectedLayout } = usePhotoBoothContext();
   
   useEffect(() => {
-    // โหลดรูปภาพและ layout จาก localStorage
-    const images = JSON.parse(localStorage.getItem('capturedImages') || '[]');
-    const layout = localStorage.getItem('selectedLayout');
-    
-    setCapturedImages(images);
-    setSelectedLayout(layout);
-  }, []);
-
-  const handleFilterSelect = (filter) => {
-    setSelectedFilter(filter);
-  };
-
-  const handleDownload = () => {
-    // สร้างลิงก์ดาวน์โหลดรูปภาพ
-    const canvas = document.getElementById('final-photo-canvas');
-    if (canvas) {
-      const link = document.createElement('a');
-      link.download = 'photobooth-image.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+    if (!capturedImages || capturedImages.length === 0) {
+      router.push('/select-feature');
     }
-  };
-
+  }, [capturedImages, router]);
+  
+  // โค้ดสำหรับการแสดงภาพและแชร์
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md max-w-2xl w-full">
-        <h1 className="text-2xl font-bold mb-6 text-center">Your final photos</h1>
-        
-        <div className="grid grid-cols-2 gap-6">
-          <div className="col-span-1">
-            <PhotoPreview 
-              images={capturedImages}
-              layout={selectedLayout}
-              filter={selectedFilter}
-            />
+    <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
+      {/* Background Animation - เหมือนหน้าอื่น ๆ */}
+      <div className="area absolute inset-0 z-0 bg-white">
+        <ul className="circles">
+          {[
+          { src: "/image/kitty.png", alt: "Hello Kitty" },
+          { src: "/image/hangyodon.jpg", alt: "Hangyodon" },
+          { src: "/image/Tuxedo.png", alt: "Tuxedo Sam" },
+          { src: "/image/mymelody.png", alt: "My Melody" },
+          { src: "/image/littletwinstar.png", alt: "Little Twin Stars" },
+          { src: "/image/keroppi.png", alt: "Keroppi" },
+          { src: "/image/chococat.png", alt: "Chococat" },
+          { src: "/image/kuromi.png", alt: "Kuromi" },
+          { src: "/image/Badtz-Maru.png", alt: "Hello Kitty" },
+          { src: "/image/Pochacco.png", alt: "Pochacco" },
+           ].map((item, index) => (
+            <li key={index} className="relative">
+             <Image 
+              src={item.src}  
+              fill 
+              alt={item.alt} 
+              className="object-contain" 
+              priority={index < 2}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+      
+      <div className="relative z-10 w-full max-w-2xl px-4">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-black">Your Photos</h1>
+        <div className="bg-white p-6 md:p-8 rounded-lg shadow-md w-full">
+          {/* แสดงรูปภาพตาม layout ที่เลือก */}
+          <div className="grid grid-cols-1 gap-4">
+            {capturedImages.map((image, index) => (
+              <div key={index} className="w-full relative h-64">
+                <Image 
+                  src={image}
+                  fill
+                  alt={`Photo ${index + 1}`}
+                  className="object-contain"
+                />
+              </div>
+            ))}
           </div>
           
-          <div className="col-span-1">
-            <h2 className="text-lg font-semibold mb-4">Choose your Filter</h2>
-            <FilterSelector onSelect={handleFilterSelect} />
-            
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={handleDownload}
-                className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition"
-              >
-                Download
-              </button>
-            </div>
+          <div className="mt-6 flex justify-center gap-4">
+            <button
+              onClick={() => router.push('/select-feature')}
+              className="px-6 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
+              Start Over
+            </button>
+            <button
+              className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+            >
+              Share Photos
+            </button>
           </div>
         </div>
       </div>

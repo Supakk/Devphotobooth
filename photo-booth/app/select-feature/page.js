@@ -3,13 +3,17 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
+import { usePhotoBoothContext } from '../../context/PhotoBoothContext';
 
 export default function SelectFeaturePage() {
   const router = useRouter();
   const [selectedFeature, setSelectedFeature] = useState(null);
+  const { setSelectedFeature: setContextFeature } = usePhotoBoothContext();
 
   const handleSelect = (feature) => {
     setSelectedFeature(feature);
+
+    localStorage.setItem('selectedFeature', feature);
     router.push('/choose-layout');
   };
 
@@ -27,7 +31,7 @@ export default function SelectFeaturePage() {
               { src: "/image/keroppi.png", alt: "Keroppi" },
               { src: "/image/chococat.png", alt: "Chococat" },
               { src: "/image/kuromi.png", alt: "Kuromi" },
-              { src: "/image/kitty.png", alt: "Hello Kitty" },
+              { src: "/image/Badtz-Maru.png", alt: "Hello Kitty" },
               { src: "/image/Pochacco.png", alt: "Pochacco" },
             ].map((item, index) => (
               <li key={index} className="relative">

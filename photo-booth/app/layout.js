@@ -1,4 +1,5 @@
 import './globals.css';
+import { PhotoBoothProvider } from '../context/PhotoBoothContext';
 
 export const metadata = {
   title: 'Photo Booth App',
@@ -9,7 +10,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <main>{children}</main>
+        <PhotoBoothProvider>
+          {children}
+        </PhotoBoothProvider>
       </body>
     </html>
   );
