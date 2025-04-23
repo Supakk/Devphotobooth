@@ -1,3 +1,4 @@
+
 photobooth/
 ├── app/                          # Next.js app directory
 │   ├── page.js                   # Home/welcome page with Get Started button
