@@ -9,6 +9,7 @@ export function PhotoBoothProvider({ children }) {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [selectedLayout, setSelectedLayout] = useState(null);
   const [capturedImages, setCapturedImages] = useState([]);
+  const [mergedImage, setMergedImage] = useState(null); // เพิ่มตัวแปรสำหรับเก็บภาพที่รวมแล้ว
   
   // โหลดข้อมูลจาก localStorage เมื่อเริ่มต้น
   useEffect(() => {
@@ -16,10 +17,29 @@ export function PhotoBoothProvider({ children }) {
       const feature = localStorage.getItem('selectedFeature');
       const layout = localStorage.getItem('selectedLayout');
       const images = localStorage.getItem('capturedImages');
+      const merged = localStorage.getItem('mergedImage'); // เพิ่มการโหลด mergedImage
       
       if (feature) setSelectedFeature(feature);
-      if (layout) setSelectedLayout(layout);
-      if (images) setCapturedImages(JSON.parse(images));
+      if (layout) {
+        try {
+          setSelectedLayout(JSON.parse(layout));
+        } catch (e) {
+          // กรณีที่ layout ไม่ได้อยู่ในรูปแบบ JSON ให้ใช้ค่าเริ่มต้น
+          console.error("Error parsing layout from localStorage:", e);
+          setSelectedLayout(null);
+        }
+      }
+      if (images) {
+        try {
+          setCapturedImages(JSON.parse(images));
+        } catch (e) {
+          console.error("Error parsing images from localStorage:", e);
+          setCapturedImages([]);
+        }
+      }
+      if (merged) {
+        setMergedImage(merged);
+      }
     }
   }, []);
   
@@ -31,7 +51,7 @@ export function PhotoBoothProvider({ children }) {
   
   const updateSelectedLayout = (layout) => {
     setSelectedLayout(layout);
-    localStorage.setItem('selectedLayout', layout);
+    localStorage.setItem('selectedLayout', JSON.stringify(layout));
   };
   
   const updateCapturedImages = (images) => {
@@ -39,11 +59,25 @@ export function PhotoBoothProvider({ children }) {
     localStorage.setItem('capturedImages', JSON.stringify(images));
   };
   
+  const updateMergedImage = (image) => {
+    setMergedImage(image);
+    if (image) {
+      localStorage.setItem('mergedImage', image);
+    } else {
+      localStorage.removeItem('mergedImage');
+    }
+  };
+  
   return (
     <PhotoBoothContext.Provider value={{
-      selectedFeature, setSelectedFeature: updateSelectedFeature,
-      selectedLayout, setSelectedLayout: updateSelectedLayout,
-      capturedImages, setCapturedImages: updateCapturedImages
+      selectedFeature, 
+      setSelectedFeature: updateSelectedFeature,
+      selectedLayout, 
+      setSelectedLayout: updateSelectedLayout,
+      capturedImages, 
+      setCapturedImages: updateCapturedImages,
+      mergedImage,
+      setMergedImage: updateMergedImage
     }}>
       {children}
     </PhotoBoothContext.Provider>

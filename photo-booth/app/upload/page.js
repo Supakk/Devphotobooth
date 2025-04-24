@@ -42,7 +42,30 @@ export default function UploadPage() {
     <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
       {/* Background Animation - Same as other pages */}
       <div className="area absolute inset-0 z-0 bg-white">
-        {/* Same background content */}
+        <ul className="circles">
+          {[
+            { src: "/image/kitty.png", alt: "Hello Kitty" },
+            { src: "/image/hangyodon.jpg", alt: "Hangyodon" },
+            { src: "/image/Tuxedo.png", alt: "Tuxedo Sam" },
+            { src: "/image/mymelody.png", alt: "My Melody" },
+            { src: "/image/littletwinstar.png", alt: "Little Twin Stars" },
+            { src: "/image/keroppi.png", alt: "Keroppi" },
+            { src: "/image/chococat.png", alt: "Chococat" },
+            { src: "/image/kuromi.png", alt: "Kuromi" },
+            { src: "/image/Badtz-Maru.png", alt: "Hello Kitty" },
+            { src: "/image/Pochacco.png", alt: "Pochacco" },
+            ].map((item, index) => (
+            <li key={index} className="relative">
+             <Image 
+                src={item.src}  
+                fill 
+                alt={item.alt} 
+                className="object-contain" 
+                priority={index < 2} 
+              />
+            </li>
+          ))}
+        </ul>
       </div>
 
       <div className="relative z-10 w-full max-w-2xl px-4">
