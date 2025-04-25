@@ -67,7 +67,7 @@ export default function FinalPhotosPage() {
                   alt="Merged Layout Image"
                   width={selectedLayout.width}
                   height={selectedLayout.height}
-                  className="object-contain"
+                  className="object-cover"
                   style={{
                     maxWidth: '100%',
                     maxHeight: '100%',

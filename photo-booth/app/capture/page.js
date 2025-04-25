@@ -18,26 +18,35 @@ export default function CapturePage() {
 
   useEffect(() => {
     if (!selectedLayout) {
+      console.warn('No layout selected — redirecting to /choose-layout');
       router.push('/choose-layout');
       return;
     }
 
+    console.log('📐 Selected Layout dimensions:', selectedLayout.width, selectedLayout.height);
+    console.log('🧩 Slot Count:', selectedLayout.slots?.length);
+
     if (selectedLayout.slots && Array.isArray(selectedLayout.slots)) {
       setLayoutConfig({ photoCount: selectedLayout.slots.length });
-      const maxWidth = 300;
-      const maxHeight = 400;
-      const scaleRatio = Math.min(
-        maxWidth / selectedLayout.width,
-        maxHeight / selectedLayout.height
-      );
+  
+      const width = typeof selectedLayout.width === 'string' 
+        ? parseInt(selectedLayout.width) 
+        : selectedLayout.width;
+      const height = typeof selectedLayout.height === 'string' 
+        ? parseInt(selectedLayout.height) 
+        : selectedLayout.height;
+  
+      console.log('🧱 Set containerDimensions:', width, height);
+  
       setContainerDimensions({
-        width: selectedLayout.width * scaleRatio,
-        height: selectedLayout.height * scaleRatio
+        width,
+        height
       });
     } else {
+      console.warn('⚠️ Layout has no valid slots array');
       setLayoutConfig({ photoCount: 1 });
     }
-
+  
     setIsLoading(false);
   }, [selectedLayout, router]);
 
@@ -102,7 +111,7 @@ export default function CapturePage() {
                 {capturedImages.length > 0 && (
                   <button
                     onClick={handleRetake}
-                    className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors mt-2"
+                    className=" bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors mt-2"
                   >
                   </button>
                 )}
@@ -123,6 +132,8 @@ export default function CapturePage() {
                     overflow: 'hidden',
                   }}
                 >
+                  {console.log('🖼️ Rendering preview container:', containerDimensions)}
+
                   {selectedLayout?.image && (
                     <Image
                       src={selectedLayout.image}
@@ -140,10 +151,10 @@ export default function CapturePage() {
                         key={index}
                         style={{
                           position: 'absolute',
-                          top: slot.top * scaleRatio,
-                          left: slot.left * scaleRatio,
-                          width: slot.width * scaleRatio,
-                          height: slot.height * scaleRatio,
+                          top: slot.top,
+                          left: slot.left,
+                          width: slot.width,
+                          height: slot.height,
                           border: capturedImages[index] ? '2px solid black' : '2px dashed gray',
                           borderRadius: '6px',
                           overflow: 'hidden',

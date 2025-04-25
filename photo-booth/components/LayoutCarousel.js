@@ -9,27 +9,26 @@ const LAYOUTS = [
       name: 'Badtz-Maru 1-1', 
       template: '3 Vertical Frames', 
       image: '/imagelayout/Badtz-Maru1-1.png', 
-      width: 240, 
-      height: 320,
+      width: 105.5, 
+      height: 310,
       slots: [
-        { top: 17.5 , left: 84.5, width: 70, height: 70 },  
-        { top: 116, left: 84.5, width: 69, height: 69 }, 
-        { top: 214, left: 84.5, width: 69, height: 69 }  
+        { top: 15.5 , left: 16.5, width: 70, height: 70 },  
+        { top: 110.5, left: 16.5, width: 70, height: 70 }, 
+        { top: 205.5, left: 16.5, width: 70, height: 70 }  
       ],
     },
     { 
       id: 'layout1-2', 
       name: 'Badtz-Maru 1-2', 
-      template: '5 Vertical Frames', 
+      template: '4 Vertical Frames', 
       image: '/imagelayout/Badtz-Maru1-2.png', 
-      width: 520, 
-      height: 320,
+      width: 190, 
+      height: 310,
       slots: [
-        { top: 25, left: 20, width: 115, height: 120 },
-        { top: 25, left: 145, width: 115, height: 120 },
-        { top: 160, left: 20, width: 115, height: 120 },
-        { top: 160, left: 145, width: 115, height: 120 },
-        { top: 160, left: 200, width: 115, height: 120 },
+        { top: 8, left: 13, width: 72, height: 72 },
+        { top: 124, left: 12, width: 159.5, height: 81 },
+        { top: 225, left: 11.5, width: 72, height: 72 },
+        { top: 225, left: 101, width: 72, height: 72 },
       ],
     },
     { 
@@ -38,7 +37,7 @@ const LAYOUTS = [
       template: '4 Vertical Frames', 
       image: '/imagelayout/Badtz-Maru1-3.png', 
       width: 520, 
-      height: 320,
+      height: 310,
       slots: [
         { top: 40, left: 30, width: 220, height: 110 },
         { top: 40, left: 270, width: 220, height: 110 },
@@ -51,12 +50,12 @@ const LAYOUTS = [
       name: 'Badtz-Maru 1-4', 
       template: '3 Vertical Frames', 
       image: '/imagelayout/Badtz-Maru1-4.png', 
-      width: 240, 
-      height: 320,
+      width: 105.5, 
+      height: 290,
       slots: [
-        { top: 16, left: 69, width: 65, height: 65 },  
-        { top: 100, left: 69, width: 65, height: 65 }, 
-        { top: 182, left: 69, width: 65, height: 65 }  
+        { top: 13, left: 16, width: 70, height: 70 },   
+        { top: 88.5, left: 16  , width: 70, height: 70 }, 
+        { top: 162.5, left: 16, width: 70, height: 70 }  
       ],
     },
   ],
@@ -189,6 +188,7 @@ export default function LayoutCarousel({ onSelect }) {
   return (
     <div className="relative">
       <div className="relative w-full">
+        {/* ปุ่มย้อนกลับ */}
         <button 
           onClick={() => scrollCarousel('prev')}
           disabled={currentIndex === 0}
@@ -198,63 +198,48 @@ export default function LayoutCarousel({ onSelect }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        
+
+        {/* Carousel */}
         <div 
           ref={carouselRef}
-          className="flex overflow-x-hidden scroll-smooth py-4 px-8"
+          className="flex overflow-x-auto scroll-smooth space-x-4 py-4 px-4"
         >
           {LAYOUTS.map((layoutGroup, groupIndex) => (
-            <div 
-              key={`group-${groupIndex}`} 
-              className="flex gap-1 flex-shrink-0 w-full"
-              style={{ marginRight: groupIndex < LAYOUTS.length - 1 ? '4rem' : '0' }}
-            >
-              {layoutGroup.map((layout) => (
-                <div
-                  key={layout.id}
-                  onClick={() => handleLayoutClick(layout)}
-                  className={`relative cursor-pointer overflow-hidden border-2 ${
-                    activeLayout === layout.id ? 'border-black' : 'border-transparent'
-                  } rounded-lg`}
-                  style={{ 
-                    width: `${layout.width}px`, 
-                    height: `${layout.height}px`,
-                    maxWidth: '100%' 
-                  }}
-                >
-                  {layout.image ? (
-                    <Image
-                      src={layout.image}
-                      alt={layout.name}
-                      width={layout.width}
-                      height={layout.height}
-                      className="rounded-lg w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-white">
-                      <span className="text-lg font-medium">{layout.template}</span>
-                    </div>
-                  )}
-                  
-                  {/* แสดง preview ของ slots เพื่อให้เห็นตำแหน่งชัดเจน - เอาไว้ใช้ตอนพัฒนา */}
-                  {layout.slots && layout.slots.map((slot, idx) => (
-                    <div
-                      key={`slot-${layout.id}-${idx}`}
-                      className="absolute pointer-events-none"
-                      style={{
-                        top: `${slot.top}px`,
-                        left: `${slot.left}px`,
-                        width: `${slot.width}px`,
-                        height: `${slot.height}px`,
-                      }}
-                    />
-                  ))}
-                </div>             
-              ))}
+            <div key={`group-${groupIndex}`} className="flex gap-4 flex-shrink-0">
+              {layoutGroup.map((layout) => {
+                const aspectRatio = layout.width / layout.height || 1; // กัน error ถ้า height เป็น 0
+                return (
+                  <div
+                    key={layout.id}
+                    onClick={() => handleLayoutClick(layout)}
+                    className={`relative cursor-pointer overflow-hidden border-2 ${
+                      activeLayout === layout.id ? 'border-black' : 'border-transparent'
+                    } rounded-lg flex-shrink-0 bg-white`}
+                    style={{
+                      width: '100px', // หรือใช้ min/max ถ้าอยาก responsive
+                      aspectRatio: `${aspectRatio}`,
+                    }}
+                  >
+                    {layout.image ? (
+                      <Image
+                        src={layout.image}
+                        alt={layout.name}
+                        fill
+                        className="object-contain rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-xs text-center px-2">
+                        {layout.template}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
-        
+
+        {/* ปุ่มข้ามไปหน้า */}
         <button 
           onClick={() => scrollCarousel('next')}
           disabled={currentIndex >= LAYOUTS.length - 1}
@@ -265,8 +250,8 @@ export default function LayoutCarousel({ onSelect }) {
           </svg>
         </button>
       </div>
-      
-      {/* ตัวแสดงตำแหน่งหน้า (pagination) */}
+
+      {/* pagination dots */}
       <div className="flex justify-center mt-4 space-x-2">
         {LAYOUTS.map((_, index) => (
           <div 

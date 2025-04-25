@@ -98,7 +98,7 @@ export default function Camera({ onCapture }) {
         </div>
       ) : (
         <>
-          <div className="relative bg-black rounded-lg overflow-hidden">
+          <div className="relative bg-black rounded-lg overflow-hidden aspect-[4/4] w-full max-w-md mx-auto">
             <video 
               ref={videoRef}
               className="w-full h-full object-cover"
@@ -131,6 +131,6 @@ export default function Camera({ onCapture }) {
           <canvas ref={canvasRef} className="hidden" />
         </>
       )}
-    </div>
+    </div>  
   );
 }
