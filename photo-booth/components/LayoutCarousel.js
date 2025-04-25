@@ -12,9 +12,9 @@ const LAYOUTS = [
       width: 240, 
       height: 320,
       slots: [
-        { top: 18, left: 65, width: 69, height: 69 },  
-        { top: 116, left: 65, width: 69, height: 69 }, 
-        { top: 214, left: 65, width: 69, height: 69 }  
+        { top: 17.5 , left: 84.5, width: 70, height: 70 },  
+        { top: 116, left: 84.5, width: 69, height: 69 }, 
+        { top: 214, left: 84.5, width: 69, height: 69 }  
       ],
     },
     { 

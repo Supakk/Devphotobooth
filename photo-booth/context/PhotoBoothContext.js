@@ -9,7 +9,7 @@ export function PhotoBoothProvider({ children }) {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [selectedLayout, setSelectedLayout] = useState(null);
   const [capturedImages, setCapturedImages] = useState([]);
-  const [mergedImage, setMergedImage] = useState(null); // เพิ่มตัวแปรสำหรับเก็บภาพที่รวมแล้ว
+  const [mergedImage, setMergedImage] = useState(null);
   
   // โหลดข้อมูลจาก localStorage เมื่อเริ่มต้น
   useEffect(() => {
@@ -17,7 +17,9 @@ export function PhotoBoothProvider({ children }) {
       const feature = localStorage.getItem('selectedFeature');
       const layout = localStorage.getItem('selectedLayout');
       const images = localStorage.getItem('capturedImages');
-      const merged = localStorage.getItem('mergedImage'); // เพิ่มการโหลด mergedImage
+      const merged = localStorage.getItem('mergedImage');
+
+      
       
       if (feature) setSelectedFeature(feature);
       if (layout) {
@@ -38,7 +40,10 @@ export function PhotoBoothProvider({ children }) {
         }
       }
       if (merged) {
+        console.log("Loaded merged image from localStorage");
         setMergedImage(merged);
+      } else {
+        console.log("No merged image found in localStorage");
       }
     }
   }, []);

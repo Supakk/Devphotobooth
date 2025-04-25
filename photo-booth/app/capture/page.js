@@ -1,158 +1,152 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react'; // เพิ่ม useRef
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Camera from '../../components/Camera';
+import html2canvas from 'html2canvas';
 import { usePhotoBoothContext } from '../../context/PhotoBoothContext';
-import html2canvas from 'html2canvas'; // ต้องติดตั้ง npm install html2canvas
 
 export default function CapturePage() {
   const router = useRouter();
   const [capturedImages, setCapturedImages] = useState([]);
-  const { 
-    selectedLayout, 
-    setCapturedImages: updateContextImages,
-    setMergedImage // เพิ่มสำหรับเก็บภาพที่รวมกับ layout แล้ว
-  } = usePhotoBoothContext();
+  const { selectedLayout, setCapturedImages: updateContextImages, setMergedImage } = usePhotoBoothContext();
   const [layoutConfig, setLayoutConfig] = useState({ photoCount: 1 });
   const [isLoading, setIsLoading] = useState(true);
   const [containerDimensions, setContainerDimensions] = useState({ width: 300, height: 400 });
-  const previewRef = useRef(null); // เพิ่ม ref สำหรับ element ที่จะเอามาแปลงเป็นรูปภาพ
-  
-  // คงโค้ดส่วน useEffect และอื่นๆ เดิมไว้
+  const previewRef = useRef(null);
 
-  // เพิ่มฟังก์ชันสำหรับการรวมภาพและ layout เข้าด้วยกัน
-  const mergeImagesWithLayout = async () => {
-    if (!previewRef.current) return null;
-    
-    try {
-      setIsLoading(true);
-      
-      // ใช้ html2canvas เพื่อแปลง DOM element เป็นรูปภาพ
-      const canvas = await html2canvas(previewRef.current, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        scale: 2, // เพิ่มความละเอียด
-      });
-      
-      // แปลง canvas เป็น URL รูปภาพ
-      const mergedImageURL = canvas.toDataURL('image/png');
-      
-      // อัปเดต context เพื่อส่งไปยังหน้า final-photos
-      if (setMergedImage) {
-        setMergedImage(mergedImageURL);
-      }
-      
-      setIsLoading(false);
-      return mergedImageURL;
-    } catch (error) {
-      console.error('Error merging images:', error);
-      setIsLoading(false);
-      return null;
+  useEffect(() => {
+    if (!selectedLayout) {
+      router.push('/choose-layout');
+      return;
     }
+
+    if (selectedLayout.slots && Array.isArray(selectedLayout.slots)) {
+      setLayoutConfig({ photoCount: selectedLayout.slots.length });
+      const maxWidth = 300;
+      const maxHeight = 400;
+      const scaleRatio = Math.min(
+        maxWidth / selectedLayout.width,
+        maxHeight / selectedLayout.height
+      );
+      setContainerDimensions({
+        width: selectedLayout.width * scaleRatio,
+        height: selectedLayout.height * scaleRatio
+      });
+    } else {
+      setLayoutConfig({ photoCount: 1 });
+    }
+
+    setIsLoading(false);
+  }, [selectedLayout, router]);
+
+  const mergeCapturedWithOverlay = async () => {
+    if (!previewRef.current) return;
+
+    const canvas = await html2canvas(previewRef.current, {
+      useCORS: true,
+      backgroundColor: '#ffffff', // ป้องกันปัญหา transparent + oklch
+      scale: 1,
+    });
+
+    const mergedImageURL = canvas.toDataURL('image/png');
+    setMergedImage(mergedImageURL);
+    localStorage.setItem('mergedImage', mergedImageURL);
+    return mergedImageURL;
   };
 
-  const handleImageCapture = (imageData) => {
+  const handleImageCapture = async (imageData) => {
     const newCapturedImages = [...capturedImages, imageData];
     setCapturedImages(newCapturedImages);
-    
-    // ถ้าถ่ายครบตามจำนวนแล้ว
+
     if (newCapturedImages.length >= layoutConfig.photoCount) {
-      // เก็บรูปที่ถ่ายใน localStorage และ context
       localStorage.setItem('capturedImages', JSON.stringify(newCapturedImages));
-      
-      // อัปเดต context
-      if (updateContextImages) {
-        updateContextImages(newCapturedImages);
-      }
-      
-      // รอเล็กน้อยให้ UI เรนเดอร์ภาพครบก่อนแล้วค่อยรวมภาพ
-      setTimeout(async () => {
-        await mergeImagesWithLayout();
+      if (updateContextImages) updateContextImages(newCapturedImages);
+
+      const merged = await mergeCapturedWithOverlay();
+      if (merged) {
         router.push('/final-photos');
-      }, 500);
+      }
     }
   };
+
+  const handleRetake = () => {
+    if (capturedImages.length > 0) {
+      setCapturedImages(capturedImages.slice(0, -1));
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: '100vh' }} className="flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
-      {/* Background Animation - แบบเดิม */}
       <div className="area absolute inset-0 z-0 bg-white">
-        <ul className="circles">
-          {[
-            { src: "/image/kitty.png", alt: "Hello Kitty" },
-            { src: "/image/hangyodon.jpg", alt: "Hangyodon" },
-            { src: "/image/Tuxedo.png", alt: "Tuxedo Sam" },
-            { src: "/image/mymelody.png", alt: "My Melody" },
-            { src: "/image/littletwinstar.png", alt: "Little Twin Stars" },
-            { src: "/image/keroppi.png", alt: "Keroppi" },
-            { src: "/image/chococat.png", alt: "Chococat" },
-            { src: "/image/kuromi.png", alt: "Kuromi" },
-            { src: "/image/Badtz-Maru.png", alt: "Hello Kitty" },
-            { src: "/image/Pochacco.png", alt: "Pochacco" },
-          ].map((item, index) => (
-            <li key={index} className="relative">
-              <Image 
-                src={item.src}  
-                fill 
-                alt={item.alt} 
-                className="object-contain" 
-                priority={index < 2}
-              />
-            </li>
-          ))}
-        </ul>
+        {/* พื้นหลัง */}
       </div>
 
       <div className="relative z-10 w-full max-w-2xl px-4">
         <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-black">Capture Your Photos</h1>
         <div className="bg-white p-6 md:p-8 rounded-lg shadow-md w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Camera Section */}
+            {/* กล้อง */}
             <div className="md:col-span-1">
-              <Camera onCapture={handleImageCapture} />
+              <div className="bg-gray-50 rounded-lg p-3">
+                <Camera onCapture={handleImageCapture} />
+                {capturedImages.length > 0 && (
+                  <button
+                    onClick={handleRetake}
+                    className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors mt-2"
+                  >
+                  </button>
+                )}
+              </div>
             </div>
-            
-            {/* Preview Section */}
+
+            {/* พรีวิว */}
             <div className="md:col-span-1">
-              <div className="rounded-lg p-3 flex flex-col items-center justify-center">
-                <div 
-                  ref={previewRef} // เพิ่ม ref ตรงนี้
-                  className="relative rounded-lg overflow-hidden mx-auto border border-gray-200 shadow-sm"
+              <div className="p-3 flex flex-col items-center justify-center">
+                <div
+                  ref={previewRef}
                   style={{
-                    width: `${containerDimensions.width}px`, 
+                    width: `${containerDimensions.width}px`,
                     height: `${containerDimensions.height}px`,
-                    maxWidth: '100%',
-                    maxHeight: '65vh'
+                    position: 'relative',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #ccc',
+                    overflow: 'hidden',
                   }}
                 >
-                  {/* Layout Background */}
                   {selectedLayout?.image && (
                     <Image
                       src={selectedLayout.image}
-                      alt={selectedLayout.name || "Layout template"}
+                      alt={selectedLayout.name || 'Layout template'}
                       fill
                       className="object-contain"
                       priority
                     />
                   )}
 
-                  {/* Preview รูปที่ถ่าย */}
                   {selectedLayout?.slots?.map((slot, index) => {
-                    // คำนวณอัตราส่วนของ container เทียบกับขนาดจริงของ layout
                     const scaleRatio = containerDimensions.width / selectedLayout.width;
-                    
                     return (
                       <div
                         key={index}
-                        className={`absolute border-2 ${capturedImages[index] ? 'border-transparent' : 'border-white border-dashed'} rounded-md overflow-hidden`} // เปลี่ยนเป็น border-transparent เมื่อมีรูปแล้ว
                         style={{
+                          position: 'absolute',
                           top: slot.top * scaleRatio,
                           left: slot.left * scaleRatio,
                           width: slot.width * scaleRatio,
                           height: slot.height * scaleRatio,
+                          border: capturedImages[index] ? '2px solid black' : '2px dashed gray',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
                         }}
                       >
                         {capturedImages[index] ? (
@@ -160,36 +154,35 @@ export default function CapturePage() {
                             src={capturedImages[index]}
                             alt={`Photo ${index + 1}`}
                             fill
-                            className="object-cover" // ใช้ object-cover สำหรับรูปถ่ายเพื่อให้เต็มช่อง
+                            className="object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white bg-black bg-opacity-25">
-                            <span>{index + 1}</span>
+                          <div
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: 'rgba(0,0,0,0.1)',
+                              color: '#000',
+                              fontSize: '18px',
+                            }}
+                          >
+                            {index + 1}
                           </div>
                         )}
                       </div>
                     );
                   })}
                 </div>
-                
-                {/* ... คงโค้ดเดิมไว้ ... */}
+
+                <div className="mt-4 text-black text-sm">
+                  {capturedImages.length} / {layoutConfig.photoCount} Photos
+                </div>
               </div>
             </div>
           </div>
-          
-          {capturedImages.length >= layoutConfig.photoCount && (
-            <div className="mt-6 flex justify-center">
-              <button 
-                onClick={async () => {
-                  await mergeImagesWithLayout();
-                  router.push('/final-photos');
-                }}
-                className="px-6 py-2.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                View All Photos
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

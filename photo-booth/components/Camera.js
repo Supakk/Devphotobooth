@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 export default function Camera({ onCapture }) {
   const videoRef = useRef(null);
@@ -6,12 +6,20 @@ export default function Camera({ onCapture }) {
   const [isRecording, setIsRecording] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [cameraError, setCameraError] = useState(null);
+  
+  // แยก onCapture ออกมาเป็น useCallback เพื่อไม่ให้สร้างใหม่ทุกครั้งที่ render
+  const handleCapture = useCallback((imageData) => {
+    if (onCapture) {
+      // ต้องหน่วงเวลาเล็กน้อยเพื่อให้ React จัดการการ render ให้เสร็จก่อน
+      setTimeout(() => {
+        onCapture(imageData);
+      }, 0);
+    }
+  }, [onCapture]);
 
   useEffect(() => {
-    // เริ่มต้นกล้อง
     startCamera();
-    
-    // ทำความสะอาดเมื่อคอมโพเนนท์ถูกทำลาย
+
     return () => {
       stopCamera();
     };
@@ -40,7 +48,7 @@ export default function Camera({ onCapture }) {
     }
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = useCallback(() => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -57,11 +65,9 @@ export default function Camera({ onCapture }) {
       const imageData = canvas.toDataURL('image/png');
       
       // ส่งข้อมูลรูปภาพไปยังคอมโพเนนท์แม่
-      if (onCapture) {
-        onCapture(imageData);
-      }
+      handleCapture(imageData);
     }
-  };
+  }, [handleCapture]);
 
   const startCountdown = () => {
     setIsRecording(true);
@@ -72,8 +78,11 @@ export default function Camera({ onCapture }) {
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          capturePhoto();
-          setIsRecording(false);
+          // ย้ายการเรียก capturePhoto และ setIsRecording ไปอยู่ใน setTimeout
+          setTimeout(() => {
+            capturePhoto();
+            setIsRecording(false);
+          }, 0);
           return 0;
         }
         return prev - 1;
