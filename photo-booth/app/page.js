@@ -42,7 +42,8 @@ export default function HomePage() {
       
       {/* Content */}
       <div className="z-10 flex flex-col items-center justify-center w-full px-4 py-6">
-        <h1 className="text-3xl md:text-4xl font-semibold text-black mb-2 md:mb-6 lg:mb-10 text-center">Photo Booth</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold text-black text-center">Photo Booth</h1>
+      </div>
         <h2 className="text-xs md:text-sm font-semibold text-black mb-4 md:mb-8 lg:mb-14 text-center">
           Let's have fun taking photos! Choose props, add filters, and share your awesome moments! ✨
         </h2>
@@ -64,6 +65,5 @@ export default function HomePage() {
           </button> 
         </div>
       </div>
-    </div>
   );
 }

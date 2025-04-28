@@ -47,11 +47,11 @@ export default function SelectFeaturePage() {
           ))}
         </ul>
       </div>
-
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-black mb-6 sm:mb-8 md:mb-12 lg:mb-20 text-center z-10">
-        Please select the feature you want.
-      </h1>
-        
+      <div className="z-10 flex flex-col items-center justify-center w-full px-4 py-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-black">
+          Please select the feature you want.
+        </h1>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-xl z-10">
         <div className="bg-gray-200 p-4 sm:p-6 rounded-lg shadow-md text-center w-full flex flex-col items-center justify-center gap-3 sm:gap-4 md:gap-4">
           <h2 className="text-sm sm:text-base font-semibold text-black text-center">

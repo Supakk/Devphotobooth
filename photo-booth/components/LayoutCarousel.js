@@ -12,9 +12,9 @@ const LAYOUTS = [
       width: 105.5, 
       height: 310,
       slots: [
-        { top: 15.5 , left: 16.5, width: 70, height: 70 },  
-        { top: 110.5, left: 16.5, width: 70, height: 70 }, 
-        { top: 205.5, left: 16.5, width: 70, height: 70 }  
+        { top: 15.5 , left: 17, width: 71, height: 71 },  
+        { top: 110.5, left: 17, width: 72, height: 72 }, 
+        { top: 205.5, left: 17, width: 71, height: 71 }  
       ],
     },
     { 
@@ -216,7 +216,7 @@ export default function LayoutCarousel({ onSelect }) {
                       activeLayout === layout.id ? 'border-black' : 'border-transparent'
                     } rounded-lg flex-shrink-0 bg-white`}
                     style={{
-                      width: '100px', // หรือใช้ min/max ถ้าอยาก responsive
+                      width: '125px', // หรือใช้ min/max ถ้าอยาก responsive
                       aspectRatio: `${aspectRatio}`,
                     }}
                   >

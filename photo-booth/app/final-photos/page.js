@@ -14,11 +14,37 @@ export default function FinalPhotosPage() {
       router.push('/select-feature');
     }
   }, [capturedImages, router]);
+
+  // ฟังก์ชันสำหรับดาวน์โหลดรูปภาพ
+  const handleDownload = () => {
+    if (!mergedImage) return;
+    
+    // สร้าง link element
+    const link = document.createElement('a');
+    
+    // ตั้งชื่อไฟล์ที่จะดาวน์โหลด
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.download = `photobooth-${timestamp}.png`;
+    
+    // กำหนด url ของรูปภาพ (mergedImage เป็น base64 string)
+    link.href = mergedImage;
+    
+    // ซ่อน link และเพิ่มเข้าไปใน DOM
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    // จำลองการคลิกเพื่อเริ่มการดาวน์โหลด
+    link.click();
+    
+    // ลบ link ออกจาก DOM เมื่อดาวน์โหลดเสร็จสิ้น
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
+  };
   
   // โค้ดสำหรับการแสดงภาพและแชร์
   return (
     <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
-      {/* Background Animation - เหมือนหน้าอื่น ๆ */}
       <div className="area absolute inset-0 z-0 bg-white">
         <ul className="circles">
           {[
@@ -58,20 +84,15 @@ export default function FinalPhotosPage() {
                   width: `${selectedLayout.width}px`,
                   height: `${selectedLayout.height}px`,
                   border: '1px solid #ccc',
-                  borderRadius: '8px',
                   overflow: 'hidden',
+                  borderRadius: 0, // ตรงกับที่กำหนดใน CapturePage
                 }}
               >
                 <Image
                   src={mergedImage}
                   alt="Merged Layout Image"
-                  width={selectedLayout.width}
-                  height={selectedLayout.height}
+                  fill
                   className="object-cover"
-                  style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                  }}
                 />
               </div>
             )}
@@ -79,9 +100,13 @@ export default function FinalPhotosPage() {
           
           <div className="mt-6 flex justify-center gap-4">
             <button
-              className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+              onClick={handleDownload}
+              className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors flex items-center"
             >
-              Share Photos
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Photos
             </button>
           </div>
         </div>

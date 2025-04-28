@@ -69,7 +69,7 @@ export default function UploadPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-2xl px-4">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-black">Upload Your Photo</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-center text-black">Upload Your Photo</h1>
         <div className="bg-white p-6 md:p-8 rounded-lg shadow-md w-full">
           {previewUrl ? (
             <div className="mb-6">

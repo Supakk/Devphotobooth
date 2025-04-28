@@ -17,9 +17,7 @@ export function PhotoBoothProvider({ children }) {
       const feature = localStorage.getItem('selectedFeature');
       const layout = localStorage.getItem('selectedLayout');
       const images = localStorage.getItem('capturedImages');
-      const merged = localStorage.getItem('mergedImage');
-
-      
+      const merged = sessionStorage.getItem('mergedImage') || localStorage.getItem('mergedImage');
       
       if (feature) setSelectedFeature(feature);
       if (layout) {
@@ -67,8 +65,20 @@ export function PhotoBoothProvider({ children }) {
   const updateMergedImage = (image) => {
     setMergedImage(image);
     if (image) {
-      localStorage.setItem('mergedImage', image);
+      try {
+        // ลองใช้ sessionStorage ก่อน
+        sessionStorage.setItem('mergedImage', image);
+      } catch (e) {
+        console.error("Error saving to sessionStorage:", e);
+        try {
+          // ลองใช้ localStorage เป็นตัวเลือกสำรอง
+          localStorage.setItem('mergedImage', image);
+        } catch (e2) {
+          console.error("Error saving to localStorage:", e2);
+        }
+      }
     } else {
+      sessionStorage.removeItem('mergedImage');
       localStorage.removeItem('mergedImage');
     }
   };
