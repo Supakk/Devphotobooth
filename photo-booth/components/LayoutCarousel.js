@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import Image from 'next/image';
 
-// ตัวอย่างเลย์เอาท์ที่มีขนาดแตกต่างกัน
 const LAYOUTS = [
   [
     { 
