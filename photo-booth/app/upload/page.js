@@ -192,6 +192,7 @@ export default function UploadPage() {
                 src={item.src}  
                 fill 
                 alt={item.alt} 
+                sizes="(max-width: 320px) 80px, (max-width: 480px) 100px, (max-width: 640px) 120px, (max-width: 768px) 140px, (max-width: 1024px) 160px, (max-width: 1280px) 180px, (max-width: 1536px) 200px, 220px"
                 className="object-contain" 
                 priority={index < 2} 
               />
@@ -199,7 +200,7 @@ export default function UploadPage() {
           ))}
         </ul>
       </div>
-
+      
       <div className="relative z-10 w-full max-w-7xl px-4 py-4 sm:py-8">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-black mb-4 sm:mb-6">
           Upload Your Photos

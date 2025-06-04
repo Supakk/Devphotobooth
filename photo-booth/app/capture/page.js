@@ -204,6 +204,7 @@ export default function CapturePage() {
                 src={item.src}  
                 fill 
                 alt={item.alt} 
+                sizes="(max-width: 320px) 80px, (max-width: 480px) 100px, (max-width: 640px) 120px, (max-width: 768px) 140px, (max-width: 1024px) 160px, (max-width: 1280px) 180px, (max-width: 1536px) 200px, 220px"
                 className="object-contain" 
                 priority={index < 2} 
               />
