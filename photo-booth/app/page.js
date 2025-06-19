@@ -1,5 +1,6 @@
 'use client';
 
+import BackgroundCircles from "@/components/BackgroundCircles";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -13,33 +14,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
       {/* Background Animation */}
-      <div className="area absolute inset-0 z-0 bg-white">
-        <ul className="circles">
-          {[
-            { src: "/image/kitty.png", alt: "Hello Kitty" },
-            { src: "/image/hangyodon.jpg", alt: "Hangyodon" },
-            { src: "/image/Tuxedo.png", alt: "Tuxedo Sam" },
-            { src: "/image/mymelody.png", alt: "My Melody" },
-            { src: "/image/littletwinstar.png", alt: "Little Twin Stars" },
-            { src: "/image/keroppi.png", alt: "Keroppi" },
-            { src: "/image/chococat.png", alt: "Chococat" },
-            { src: "/image/kuromi.png", alt: "Kuromi" },
-            { src: "/image/Badtz-Maru.png", alt: "Hello Kitty" },
-            { src: "/image/Pochacco.png", alt: "Pochacco" },
-          ].map((item, index) => (
-            <li key={index} className="relative">
-              <Image 
-                src={item.src} 
-                fill 
-                alt={item.alt} 
-                className="object-contain" 
-                priority={index < 2} // ให้ความสำคัญกับรูปภาพแรกๆ
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-      
+      <BackgroundCircles />
       {/* Content */}
       <div className="z-10 flex flex-col items-center justify-center w-full px-4 py-6">
         <h1 className="text-3xl md:text-4xl font-semibold text-black text-center">Photo Booth</h1>

@@ -1,5 +1,6 @@
 'use client';
 
+import BackgroundCircles from '@/components/BackgroundCircles';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -38,33 +39,7 @@ export default function ChooseLayoutPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 md:px-8 relative overflow-hidden">
       {/* Background Animation */}
-      <div className="area absolute inset-0 z-0 bg-white">
-        <ul className="circles">
-          {[
-            { src: "/image/kitty.png", alt: "Hello Kitty" },
-            { src: "/image/hangyodon.jpg", alt: "Hangyodon" },
-            { src: "/image/Tuxedo.png", alt: "Tuxedo Sam" },
-            { src: "/image/mymelody.png", alt: "My Melody" },
-            { src: "/image/littletwinstar.png", alt: "Little Twin Stars" },
-            { src: "/image/keroppi.png", alt: "Keroppi" },
-            { src: "/image/chococat.png", alt: "Chococat" },
-            { src: "/image/kuromi.png", alt: "Kuromi" },
-            { src: "/image/Badtz-Maru.png", alt: "Badtz-Maru" },
-            { src: "/image/Pochacco.png", alt: "Pochacco" },
-          ].map((item, index) => (
-            <li key={index} className="relative">
-              <Image 
-                src={item.src}
-                alt={item.alt}
-                fill
-                sizes="(max-width: 320px) 80px, (max-width: 480px) 100px, (max-width: 640px) 120px, (max-width: 768px) 140px, (max-width: 1024px) 160px, (max-width: 1280px) 180px, (max-width: 1536px) 200px, 220px"
-                className="object-contain"
-                priority={index < 2}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+      <BackgroundCircles />
 
       {/* Main Content */}
       <div className="relative z-10 w-full max-w-2xl px-4">
