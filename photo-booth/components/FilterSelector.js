@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 // ตัวอย่างฟิลเตอร์ - คุณสามารถเพิ่มเติมได้ตามต้องการ
@@ -15,9 +15,16 @@ const filters = [
   { id: 'vintage', name: 'Vintage', class: 'filter sepia-50 contrast-75 brightness-90' },
 ];
 
-export default function FilterSelector({ onSelect }) {
+export default function FilterSelector({ onSelect, selectedFilter }) {
   const [selectedId, setSelectedId] = useState('normal');
-  
+
+  // Sync with parent component's selected filter
+  useEffect(() => {
+    if (selectedFilter && selectedFilter.id) {
+      setSelectedId(selectedFilter.id);
+    }
+  }, [selectedFilter]);
+
   const handleFilterClick = (filter) => {
     setSelectedId(filter.id);
     if (onSelect) {
@@ -26,27 +33,24 @@ export default function FilterSelector({ onSelect }) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="flex flex-wrap justify-start gap-2 md:gap-3">
       {filters.map((filter) => (
         <button
           key={filter.id}
           onClick={() => handleFilterClick(filter)}
-          className={`p-2 rounded-lg transition-all ${
+          className={`transition-all ${
             selectedId === filter.id
-              ? 'ring-2 ring-black bg-gray-200 text-white'
-              : 'hover:bg-gray-100'
+              ? 'ring-2 ring-black ring-offset-2'
+              : 'hover:ring-2 hover:ring-gray-400 hover:ring-offset-1'
           }`}
         >
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-16 h-16 rounded bg-gray-300 flex items-center justify-center mb-1 ${filter.class}`}
-            >
-              {/* สามารถใส่รูปตัวอย่างให้ฟิลเตอร์ได้ */}
-              <span className="text-2xl">📷</span>
+          <div
+            className={`w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-gray-300 ${filter.class}`}
+          >
+            {/* Preview circle with filter applied */}
+            <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
+              <span className="text-white text-sm font-bold">F</span>
             </div>
-            <span className="text-xs font-medium text-gray-700">
-              {filter.name}
-            </span>
           </div>
         </button>
       ))}
