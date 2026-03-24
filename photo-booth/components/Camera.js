@@ -2,50 +2,44 @@
 
 import { useRef, useEffect, useState } from 'react';
 
-export default function Camera({ onCapture, selectedFilter = { id: 'normal', name: 'Normal', class: '' } }) {
+export default function Camera({ onCapture, selectedFilter = { id: 'normal', cssFilter: 'none' } }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [cameraReady, setCameraReady] = useState(false);
-  const [countdown, setCountdown] = useState(0);
   const streamRef = useRef(null);
+  const intervalRef = useRef(null); // ← fix: track interval for cleanup
+
+  const [cameraReady, setCameraReady] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   useEffect(() => {
     startCamera();
     return () => {
       stopCamera();
+      if (intervalRef.current) clearInterval(intervalRef.current); // ← fix
     };
   }, []);
 
   const startCamera = async () => {
     try {
-      const constraints = {
-        video: {
-          facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         setCameraReady(true);
       }
     } catch (err) {
-      console.error('Error accessing camera: ', err);
-      alert('Cannot access camera. Please check permissions.');
+      console.error('Camera error:', err);
+      alert('Cannot access camera. Please allow camera permission and reload.');
     }
   };
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      const tracks = streamRef.current.getTracks();
-      tracks.forEach(track => track.stop());
-      streamRef.current = null;
-    }
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
   };
 
   const capturePhoto = () => {
@@ -54,10 +48,11 @@ export default function Camera({ onCapture, selectedFilter = { id: 'normal', nam
     setIsCapturing(true);
     setCountdown(3);
 
-    const countdownInterval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(countdownInterval);
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
           setTimeout(() => {
             takeSnapshot();
             setIsCapturing(false);
@@ -71,81 +66,61 @@ export default function Camera({ onCapture, selectedFilter = { id: 'normal', nam
 
   const takeSnapshot = () => {
     if (!videoRef.current || !canvasRef.current) return;
-
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d');
 
-    // Set canvas dimensions to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    // Draw video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Apply similar filter effects as in CSS if needed
-    // This would need custom implementations for each filter
-    if (selectedFilter.id !== 'normal') {
-      applyCanvasFilter(context, canvas, selectedFilter.id);
+    // ← fix: apply filter directly on canvas 2D context (works for ALL filter types)
+    const cssFilter = selectedFilter?.cssFilter || 'none';
+    if (cssFilter !== 'none') {
+      ctx.filter = cssFilter;
     }
 
-    // Convert to data URL
-    const imageDataURL = canvas.toDataURL('image/png');
-    
-    // Pass to parent
-    if (onCapture) {
-      onCapture(imageDataURL);
-    }
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.filter = 'none'; // reset
+
+    const dataURL = canvas.toDataURL('image/jpeg', 0.92);
+    if (onCapture) onCapture(dataURL);
   };
 
-  // Function to apply filter effects on canvas
-  // Note: This is a simplified version - for production you'd need more sophisticated filter implementations
-  const applyCanvasFilter = (context, canvas, filterId) => {
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    switch (filterId) {
-      case 'grayscale':
-        for (let i = 0; i < data.length; i += 4) {
-          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          data[i] = avg;     // R
-          data[i + 1] = avg; // G
-          data[i + 2] = avg; // B
-        }
-        break;
-      case 'sepia':
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          
-          data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
-          data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
-          data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-        }
-        break;
-      // Add more filter cases as needed
-    }
-    
-    context.putImageData(imageData, 0, 0);
-  };
+  const filterStyle = selectedFilter?.cssFilter && selectedFilter.cssFilter !== 'none'
+    ? { filter: selectedFilter.cssFilter }
+    : {};
 
   return (
     <div className="relative w-full">
-      {/* Camera display with filter applied */}
-      <div className={`relative w-full overflow-hidden rounded-lg ${selectedFilter.class}`}>
+      {/* Video preview with filter applied via inline style */}
+      <div className="relative w-full rounded-xl overflow-hidden bg-black shadow-lg" style={filterStyle}>
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
           className="w-full h-full object-cover"
+          style={{ aspectRatio: '4/3' }}
         />
-        
+
+        {/* Countdown overlay */}
         {isCapturing && countdown > 0 && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-6xl font-bold text-white bg-black bg-opacity-50 rounded-full w-24 h-24 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <div
+              className="text-7xl font-bold text-white drop-shadow-xl"
+              style={{ textShadow: '0 2px 16px rgba(217,70,239,0.7)' }}
+            >
               {countdown}
+            </div>
+          </div>
+        )}
+
+        {/* Camera not ready overlay */}
+        {!cameraReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="flex flex-col items-center gap-3 text-white">
+              <div className="w-10 h-10 border-4 border-fuchsia-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm opacity-70">Starting camera…</p>
             </div>
           </div>
         )}
@@ -153,17 +128,32 @@ export default function Camera({ onCapture, selectedFilter = { id: 'normal', nam
 
       <canvas ref={canvasRef} className="hidden" />
 
+      {/* Shutter button */}
       <div className="mt-4 flex justify-center">
         <button
           onClick={capturePhoto}
           disabled={!cameraReady || isCapturing}
-          className={`px-6 py-2 rounded-full ${
-            !cameraReady || isCapturing
-              ? 'bg-gray-400'
-              : 'bg-black hover:bg-gray-800'
-          } text-white font-medium transition-colors`}
+          className="relative"
+          aria-label="Take photo"
         >
-          {isCapturing ? 'Capturing...' : 'Take Photo'}
+          {/* Outer ring */}
+          <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center transition-all ${
+            !cameraReady || isCapturing
+              ? 'border-gray-300 opacity-50'
+              : 'border-fuchsia-400 hover:border-fuchsia-500'
+          }`}>
+            {/* Inner fill */}
+            <div className={`w-11 h-11 rounded-full transition-all ${
+              !cameraReady || isCapturing
+                ? 'bg-gray-300'
+                : 'bg-gradient-to-br from-fuchsia-400 to-violet-500 hover:from-fuchsia-500 hover:to-violet-600'
+            }`} />
+          </div>
+          {isCapturing && (
+            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-violet-500 font-medium whitespace-nowrap">
+              {countdown > 0 ? `Taking in ${countdown}…` : 'Capturing…'}
+            </span>
+          )}
         </button>
       </div>
     </div>

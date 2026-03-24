@@ -1,239 +1,141 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --bg-from: #fdf4ff;
+  --bg-to: #eff6ff;
+  --accent: #d946ef;
+  --accent-dark: #a21caf;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  color: #1e1b4b;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #fdf4ff 0%, #f5f3ff 40%, #eff6ff 100%);
+  background-attachment: fixed;
 }
 
-/*Start Animations*/
-@-webkit-keyframes animatetop {
-	from {
-		top: -300px;
-		opacity: 0;
-	}
-	to {
-		top: 0;
-		opacity: 1;
-	}
-}
-@keyframes animatetop {
-	from {
-		top: -300px;
-		opacity: 0;
-	}
-	to {
-		top: 0;
-		opacity: 1;
-	}
-}
-@-webkit-keyframes zoomIn {
-	0% {
-		opacity: 0;
-		-webkit-transform: scale3d(0.3, 0.3, 0.3);
-		transform: scale3d(0.3, 0.3, 0.3);
-	}
-	50% {
-		opacity: 1;
-	}
-}
-@keyframes zoomIn {
-	0% {
-		opacity: 0;
-		-webkit-transform: scale3d(0.3, 0.3, 0.3);
-		transform: scale3d(0.3, 0.3, 0.3);
-	}
-	50% {
-		opacity: 1;
-	}
-}
-/*End Animations*/
-/*
--- Start BackGround Animation 
-*/
-.area {
-  background: #ffffff; /* เปลี่ยนเป็นสีขาว */
-  width: 100%;
-  height: 100vh;
-  position: absolute;
-  z-index: -1;
+/* ── Floating character animation ── */
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  8% { opacity: 0.12; }
+  92% { opacity: 0.12; }
+  100% {
+    transform: translateY(-110vh) rotate(540deg);
+    opacity: 0;
+  }
 }
 
-.circles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 96%;
+/* ── Soft pulse for bokeh orbs ── */
+@keyframes blobPulse {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  33% { transform: scale(1.08) translate(20px, -15px); }
+  66% { transform: scale(0.94) translate(-15px, 12px); }
+}
+
+/* ── Fade-in for page content ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.45s ease both;
+}
+
+/* ── Gradient text utility ── */
+.text-gradient {
+  background: linear-gradient(135deg, #d946ef, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Primary button gradient ── */
+.btn-primary {
+  background: linear-gradient(135deg, #d946ef, #7c3aed);
+  color: white;
+  padding: 0.6rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled {
+  background: #d1d5db;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Secondary button ── */
+.btn-secondary {
+  background: white;
+  color: #7c3aed;
+  padding: 0.6rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 2px solid #ddd6fe;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-secondary:hover { border-color: #7c3aed; background: #faf5ff; }
+
+/* ── Card base ── */
+.card {
+  background: white;
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 24px rgba(139, 92, 246, 0.08), 0 1px 4px rgba(0,0,0,0.05);
+  border: 1px solid rgba(221, 214, 254, 0.5);
+}
+
+/* ── Progress bar track ── */
+.progress-track {
+  background: #ede9fe;
+  border-radius: 9999px;
+  height: 6px;
   overflow: hidden;
 }
-
-.circles li {
-  position: absolute;
-  display: block;
-  list-style: none;
-  width: 20px;
-  height: 20px;
-  background: transparent;
-  animation: animate 25s linear infinite;
-  bottom: -150px;
+.progress-fill {
+  background: linear-gradient(90deg, #d946ef, #7c3aed);
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
 }
 
-.circles li:nth-child(1) {
-	left: 25%;
-	width: 80px;
-	height: 80px;
-	animation-delay: 0s;
+/* ── Step indicator ── */
+.step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
-
-.circles li:nth-child(2) {
-	left: 10%;
-	width: 100px;
-	height: 100px;
-	animation-delay: 2s;
-	animation-duration: 12s;
+.step-badge.active {
+  background: linear-gradient(135deg, #d946ef, #7c3aed);
+  color: white;
 }
-
-.circles li:nth-child(3) {
-	left: 70%;
-	width: 60px;
-	height: 60px;
-	animation-delay: 4s;
+.step-badge.done {
+  background: #86efac;
+  color: #166534;
 }
-
-.circles li:nth-child(4) {
-	left: 40%;
-	width: 60px;
-	height: 60px;
-	animation-delay: 0s;
-	animation-duration: 18s;
+.step-badge.upcoming {
+  background: #ede9fe;
+  color: #7c3aed;
 }
-
-.circles li:nth-child(5) {
-	left: 65%;
-	width: 80px;
-	height: 80px;
-	animation-delay: 0s;
-}
-
-.circles li:nth-child(6) {
-	left: 75%;
-	width: 110px;
-	height: 110px;
-	animation-delay: 3s;
-}
-
-.circles li:nth-child(7) {
-	left: 35%;
-	width: 150px;
-	height: 150px;
-	animation-delay: 7s;
-}
-
-.circles li:nth-child(8) {
-	left: 50%;
-	width: 75px;
-	height: 75px;
-	animation-delay: 15s;
-	animation-duration: 45s;
-}
-
-.circles li:nth-child(9) {
-	left: 20%;
-	width: 50px;
-	height: 50px;
-	animation-delay: 2s;
-	animation-duration: 35s;
-}
-
-.circles li:nth-child(10) {
-	left: 85%;
-	width: 150px;
-	height: 150px;
-	animation-delay: 0s;
-	animation-duration: 11s;
-}
-
-@keyframes animate {
-	0% {
-		transform: translateY(0) rotate(0deg);
-		opacity: 1;
-		border-radius: 0;
-	}
-
-	100% {
-		transform: translateY(-1000px) rotate(720deg);
-		opacity: 0;
-		border-radius: 50%;
-	}
-}
-
-/* Filter CSS classes - ใส่ในไฟล์ global.css */
-
-.filter {
-	position: relative;
-  }
-  
-  /* Grayscale filter */
-  .grayscale {
-	filter: grayscale(100%);
-  }
-  
-  /* Sepia filter */
-  .sepia {
-	filter: sepia(100%);
-  }
-  
-  /* Saturation filter */
-  .saturate-150 {
-	filter: saturate(150%);
-  }
-  
-  /* Contrast filter */
-  .contrast-125 {
-	filter: contrast(125%);
-  }
-  
-  /* Brightness filter */
-  .brightness-105 {
-	filter: brightness(105%);
-  }
-  
-  /* Hue rotation filter */
-  .hue-rotate-15 {
-	filter: hue-rotate(15deg);
-  }
-  
-  /* Sepia with different intensities */
-  .sepia-25 {
-	filter: sepia(25%);
-  }
-  
-  .sepia-50 {
-	filter: sepia(50%);
-  }
-  
-  /* Combine filters */
-  .brightness-105.sepia-25 {
-	filter: brightness(105%) sepia(25%);
-  }
-  
-  .brightness-105.hue-rotate-15 {
-	filter: brightness(105%) hue-rotate(15deg);
-  }
-  
-  .sepia-50.contrast-75.brightness-90 {
-	filter: sepia(50%) contrast(75%) brightness(90%);
-  }
