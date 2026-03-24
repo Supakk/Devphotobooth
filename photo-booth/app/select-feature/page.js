@@ -2,77 +2,79 @@
 
 import BackgroundCircles from '@/components/BackgroundCircles';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import Image from 'next/image';
 import { usePhotoBoothContext } from '../../context/PhotoBoothContext';
 
+const FEATURES = [
+  {
+    id: 'camera',
+    label: 'Take a Photo',
+    desc: 'Use your webcam with live filters',
+    // ← FIXED: was "Logocamera.png" (uppercase L) — fails on Linux
+    icon: '/image/logocamera.png',
+  },
+  {
+    id: 'gallery',
+    label: 'Upload Photos',
+    desc: 'Pick existing photos from your device',
+    // ← FIXED: was "Logoupload.png" (uppercase L)
+    icon: '/image/logoupload.png',
+  },
+];
+
 export default function SelectFeaturePage() {
   const router = useRouter();
-  const [selectedFeature, setSelectedFeature] = useState(null);
-  const { setSelectedFeature: setContextFeature } = usePhotoBoothContext();
+  const { setSelectedFeature } = usePhotoBoothContext();
 
-  const handleSelect = (feature) => {
-    setSelectedFeature(feature);
-    setContextFeature?.(feature); // ใช้ optional chaining เพื่อป้องกัน error
-
-    localStorage.setItem('selectedFeature', feature);
-    router.push('/choose-layout');    
+  const handleSelect = (featureId) => {
+    setSelectedFeature(featureId); // context + localStorage
+    router.push('/choose-layout');
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-6 sm:px-6 relative overflow-hidden">
-      {/* Background Animation */}
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
       <BackgroundCircles />
 
-      {/* Content */}
-      <div className="z-10 flex flex-col items-center justify-center w-full px-4 py-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-center text-black">
-          Please select the feature you want.
-        </h1>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-xl z-10">
-        <div className="bg-gray-200 p-4 sm:p-6 rounded-lg shadow-md text-center w-full flex flex-col items-center justify-center gap-3 sm:gap-4 md:gap-4">
-          <h2 className="text-sm sm:text-base font-semibold text-black text-center">
-            Take a photo 
-          </h2>
-          <div className="mb-2 sm:mb-4 flex justify-center">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-white rounded-lg flex items-center justify-center border-2 border-gray-300 relative overflow-hidden">
-              <Image
-                src="/image/Logocamera.png" 
-                fill 
-                alt="Photo Booth Icon" 
-                className="object-cover"
-              />
-            </div>
-          </div>
-          <button
-            onClick={() => handleSelect('camera')}
-            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition font-medium text-base min-w-24"
-          >
-            Select
-          </button>
+      <div className="relative z-10 w-full max-w-lg animate-fadeInUp">
+        {/* Back */}
+        <button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-1.5 text-violet-600 font-medium text-sm mb-6 hover:text-violet-800 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+
+        {/* Step badge + title */}
+        <div className="mb-8 text-center">
+          <span className="inline-block text-xs font-bold uppercase tracking-wider text-fuchsia-500 bg-fuchsia-50 border border-fuchsia-200 px-3 py-1 rounded-full mb-3">
+            Step 1 of 3
+          </span>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900">
+            How do you want to add photos?
+          </h1>
         </div>
-          
-        <div className="bg-gray-200 p-4 sm:p-6 rounded-lg shadow-md text-center w-full flex flex-col items-center justify-center gap-3 sm:gap-4 md:gap-4">
-          <h2 className="text-sm sm:text-base font-semibold text-black text-center">
-            Upload photo 
-          </h2>
-          <div className="mb-2 sm:mb-4 flex justify-center">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 bg-white rounded-lg flex items-center justify-center border-2 border-gray-300 relative overflow-hidden">
-              <Image
-                src="/image/Logoupload.png" 
-                fill 
-                alt="Photo Booth Icon" 
-                className="object-cover"
-              />
-            </div>
-          </div>
-          <button
-            onClick={() => handleSelect('gallery')}
-            className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition font-medium text-base min-w-24"
-          >
-            Select
-          </button>
+
+        {/* Feature cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {FEATURES.map(f => (
+            <button
+              key={f.id}
+              onClick={() => handleSelect(f.id)}
+              className="card p-6 flex flex-col items-center gap-4 text-center group hover:border-fuchsia-300 hover:shadow-fuchsia-100 hover:shadow-xl transition-all duration-200 active:scale-98"
+            >
+              <div className="w-24 h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gradient-to-br from-fuchsia-50 to-violet-50 flex items-center justify-center relative shadow-sm group-hover:shadow-md transition-shadow">
+                <Image src={f.icon} fill alt={f.label} className="object-contain p-2" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-800 text-base group-hover:text-fuchsia-600 transition-colors">{f.label}</p>
+                <p className="text-gray-400 text-xs mt-1">{f.desc}</p>
+              </div>
+              <div className="btn-primary w-full text-sm py-2">Select</div>
+            </button>
+          ))}
         </div>
       </div>
     </div>

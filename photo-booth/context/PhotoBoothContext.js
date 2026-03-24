@@ -1,4 +1,3 @@
-// context/PhotoBoothContext.js
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
@@ -10,89 +9,76 @@ export function PhotoBoothProvider({ children }) {
   const [selectedLayout, setSelectedLayout] = useState(null);
   const [capturedImages, setCapturedImages] = useState([]);
   const [mergedImage, setMergedImage] = useState(null);
-  
-  // โหลดข้อมูลจาก localStorage เมื่อเริ่มต้น
+
+  // On mount: restore only small data (feature + layout) from localStorage.
+  // Never restore large base64 images from localStorage — quota would overflow.
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const feature = localStorage.getItem('selectedFeature');
-      const layout = localStorage.getItem('selectedLayout');
-      const images = localStorage.getItem('capturedImages');
-      const merged = sessionStorage.getItem('mergedImage') || localStorage.getItem('mergedImage');
-      
-      if (feature) setSelectedFeature(feature);
-      if (layout) {
-        try {
-          setSelectedLayout(JSON.parse(layout));
-        } catch (e) {
-          // กรณีที่ layout ไม่ได้อยู่ในรูปแบบ JSON ให้ใช้ค่าเริ่มต้น
-          console.error("Error parsing layout from localStorage:", e);
-          setSelectedLayout(null);
-        }
-      }
-      if (images) {
-        try {
-          setCapturedImages(JSON.parse(images));
-        } catch (e) {
-          console.error("Error parsing images from localStorage:", e);
-          setCapturedImages([]);
-        }
-      }
-      if (merged) {
-        console.log("Loaded merged image from localStorage");
-        setMergedImage(merged);
-      } else {
-        console.log("No merged image found in localStorage");
-      }
+    if (typeof window === 'undefined') return;
+
+    const feature = localStorage.getItem('selectedFeature');
+    if (feature) setSelectedFeature(feature);
+
+    const layoutRaw = localStorage.getItem('selectedLayout');
+    if (layoutRaw) {
+      try { setSelectedLayout(JSON.parse(layoutRaw)); } catch { /* ignore */ }
     }
+
+    // mergedImage lives only in sessionStorage (survives tab navigation, not refresh flood)
+    try {
+      const merged = sessionStorage.getItem('mergedImage');
+      if (merged) setMergedImage(merged);
+    } catch { /* ignore */ }
   }, []);
-  
-  // บันทึกข้อมูลลง localStorage เมื่อมีการเปลี่ยนแปลง
+
+  // ── Updaters ──────────────────────────────────────────────────────────────
+
   const updateSelectedFeature = (feature) => {
     setSelectedFeature(feature);
-    localStorage.setItem('selectedFeature', feature);
+    try { localStorage.setItem('selectedFeature', feature); } catch { /* ignore */ }
   };
-  
+
   const updateSelectedLayout = (layout) => {
     setSelectedLayout(layout);
-    localStorage.setItem('selectedLayout', JSON.stringify(layout));
+    try { localStorage.setItem('selectedLayout', JSON.stringify(layout)); } catch { /* ignore */ }
   };
-  
+
+  // capturedImages are kept in React state only — base64 data URLs are too
+  // large for localStorage and are only needed within one session flow.
   const updateCapturedImages = (images) => {
     setCapturedImages(images);
-    localStorage.setItem('capturedImages', JSON.stringify(images));
   };
-  
+
   const updateMergedImage = (image) => {
     setMergedImage(image);
-    if (image) {
-      try {
-        // ลองใช้ sessionStorage ก่อน
+    try {
+      if (image) {
         sessionStorage.setItem('mergedImage', image);
-      } catch (e) {
-        console.error("Error saving to sessionStorage:", e);
-        try {
-          // ลองใช้ localStorage เป็นตัวเลือกสำรอง
-          localStorage.setItem('mergedImage', image);
-        } catch (e2) {
-          console.error("Error saving to localStorage:", e2);
-        }
+      } else {
+        sessionStorage.removeItem('mergedImage');
       }
-    } else {
-      sessionStorage.removeItem('mergedImage');
-      localStorage.removeItem('mergedImage');
+    } catch (e) {
+      // sessionStorage quota exceeded — keep in React state only
+      console.warn('Could not persist mergedImage to sessionStorage:', e);
     }
   };
-  
+
+  const resetSession = () => {
+    setCapturedImages([]);
+    setMergedImage(null);
+    try { sessionStorage.removeItem('mergedImage'); } catch { /* ignore */ }
+  };
+
   return (
     <PhotoBoothContext.Provider value={{
-      selectedFeature, 
+      selectedFeature,
       setSelectedFeature: updateSelectedFeature,
-      selectedLayout, 
+      selectedLayout,
       setSelectedLayout: updateSelectedLayout,
-      capturedImages, 
+      capturedImages,
       setCapturedImages: updateCapturedImages,
       mergedImage,
-      setMergedImage: updateMergedImage
+      setMergedImage: updateMergedImage,
+      resetSession,
     }}>
       {children}
     </PhotoBoothContext.Provider>
