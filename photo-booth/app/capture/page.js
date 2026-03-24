@@ -2,11 +2,19 @@
 
 import BackgroundCircles from '@/components/BackgroundCircles';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Camera from '../../components/Camera';
 import FilterSelector, { FILTERS } from '../../components/FilterSelector';
-import html2canvas from 'html2canvas';
 import { usePhotoBoothContext } from '../../context/PhotoBoothContext';
+
+// Load an image from a src (data URL or path) and return HTMLImageElement
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
 
 export default function CapturePage() {
   const router = useRouter();
@@ -18,11 +26,7 @@ export default function CapturePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mergeError, setMergeError] = useState(null);
   const [containerDims, setContainerDims] = useState({ width: 190, height: 310 });
-
-  // ── SINGLE ref for the hidden off-screen merge target ────────────────────
-  // There is only ONE element using this ref — the off-screen div below.
-  // The visible preview is purely decorative and uses NO ref.
-  const mergeRef = useRef(null);
+  // Note: no mergeRef needed — merge is done via Pure Canvas, not DOM capture
 
   // Redirect if no layout selected
   useEffect(() => {
@@ -38,31 +42,77 @@ export default function CapturePage() {
   }, [selectedLayout, router]);
 
   // ── Auto-merge once all photos are captured ──────────────────────────────
-  // Uses useEffect so we wait for React to commit the new capturedImages to
-  // the DOM (inside the hidden merge div) before running html2canvas.
   useEffect(() => {
     if (capturedImages.length > 0 && capturedImages.length >= photoCount && !isProcessing) {
-      const timer = setTimeout(() => {
-        doMerge();
-      }, 600); // Let React paint the new image into the hidden div
-      return () => clearTimeout(timer);
+      doMerge();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capturedImages.length, photoCount]);
 
+  // ── Pure Canvas merge — no DOM dependency, no html2canvas ────────────────
+  // Draws each captured photo into its slot, then composites the overlay PNG.
+  // object-fit: cover is replicated by cropping from the center of each image.
   const doMerge = async () => {
-    if (!mergeRef.current) { setMergeError('Merge target not found'); return; }
+    if (!selectedLayout) return;
     setIsProcessing(true);
     setMergeError(null);
     try {
-      const canvas = await html2canvas(mergeRef.current, {
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        allowTaint: true,
-        imageTimeout: 15000,
-      });
+      const { width, height, slots, image: overlayPath } = selectedLayout;
+      const SCALE = 2; // output at 2× resolution for sharpness
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(width  * SCALE);
+      canvas.height = Math.round(height * SCALE);
+      const ctx = canvas.getContext('2d');
+
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw each photo into its slot (cover crop + filter)
+      const filterStr = selectedFilter?.cssFilter || 'none';
+      for (let i = 0; i < slots.length; i++) {
+        if (!capturedImages[i]) continue;
+        const slot = slots[i];
+        const img  = await loadImage(capturedImages[i]);
+
+        const dx = slot.left  * SCALE;
+        const dy = slot.top   * SCALE;
+        const dw = slot.width * SCALE;
+        const dh = slot.height * SCALE;
+
+        // Replicate object-fit: cover — crop from center
+        const imgRatio  = img.width / img.height;
+        const slotRatio = dw / dh;
+        let sx, sy, sw, sh;
+        if (imgRatio > slotRatio) {
+          sh = img.height;
+          sw = sh * slotRatio;
+          sx = (img.width - sw) / 2;
+          sy = 0;
+        } else {
+          sw = img.width;
+          sh = sw / slotRatio;
+          sx = 0;
+          sy = (img.height - sh) / 2;
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(dx, dy, dw, dh);
+        ctx.clip();
+        ctx.filter = filterStr !== 'none' ? filterStr : 'none';
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.filter = 'none';
+        ctx.restore();
+      }
+
+      // Composite overlay frame on top
+      if (overlayPath) {
+        const overlay = await loadImage(overlayPath);
+        ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+      }
+
       const dataURL = canvas.toDataURL('image/jpeg', 0.92);
       setMergedImage(dataURL);
       syncContextImages(capturedImages);
@@ -98,59 +148,6 @@ export default function CapturePage() {
   return (
     <div className="relative min-h-screen overflow-hidden pb-10">
       <BackgroundCircles />
-
-      {/* ── OFF-SCREEN MERGE TARGET (single previewRef) ─────────────────── */}
-      {/* Fixed position far off-screen so it's in the DOM but invisible.
-          html2canvas captures DOM elements regardless of visual position. */}
-      <div
-        ref={mergeRef}
-        style={{
-          position: 'fixed',
-          top: '-9999px',
-          left: '-9999px',
-          width: `${containerDims.width}px`,
-          height: `${containerDims.height}px`,
-          backgroundColor: '#ffffff',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Photo slots at full (1:1) scale */}
-        {selectedLayout.slots?.map((slot, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              top: `${slot.top}px`,
-              left: `${slot.left}px`,
-              width: `${slot.width}px`,
-              height: `${slot.height}px`,
-              overflow: 'hidden',
-            }}
-          >
-            {capturedImages[i] && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={capturedImages[i]}
-                alt=""
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            )}
-          </div>
-        ))}
-        {/* Layout overlay image */}
-        {selectedLayout.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={selectedLayout.image}
-            alt=""
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%',
-              objectFit: 'contain', zIndex: 10,
-            }}
-          />
-        )}
-      </div>
 
       {/* ── VISIBLE UI ──────────────────────────────────────────────────── */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 pt-6">
