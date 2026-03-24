@@ -41,14 +41,6 @@ export default function CapturePage() {
     });
   }, [selectedLayout, router]);
 
-  // ── Auto-merge once all photos are captured ──────────────────────────────
-  useEffect(() => {
-    if (capturedImages.length > 0 && capturedImages.length >= photoCount && !isProcessing) {
-      doMerge();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImages.length, photoCount]);
-
   // ── Pure Canvas merge — no DOM dependency, no html2canvas ────────────────
   // Draws each captured photo into its slot, then composites the overlay PNG.
   // object-fit: cover is replicated by cropping from the center of each image.
@@ -124,6 +116,14 @@ export default function CapturePage() {
       setIsProcessing(false);
     }
   };
+
+  // ── Auto-merge once all photos are captured ──────────────────────────────
+  useEffect(() => {
+    if (capturedImages.length > 0 && capturedImages.length >= photoCount && !isProcessing) {
+      doMerge();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImages.length, photoCount]);
 
   const handleCapture = (dataURL) => {
     setCapturedImages(prev => [...prev, dataURL]);

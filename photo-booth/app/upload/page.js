@@ -2,9 +2,17 @@
 
 import BackgroundCircles from '@/components/BackgroundCircles';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { usePhotoBoothContext } from '../../context/PhotoBoothContext';
-import html2canvas from 'html2canvas';
+
+// Load an image from a src (data URL or path) and return HTMLImageElement
+const loadImage = (src) =>
+  new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
 
 export default function UploadPage() {
   const router = useRouter();
@@ -15,9 +23,6 @@ export default function UploadPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [dims, setDims] = useState({ width: 190, height: 310 });
-
-  // ── SINGLE ref for the off-screen merge target ───────────────────────────
-  const mergeRef = useRef(null);
 
   useEffect(() => {
     if (!selectedLayout) { router.replace('/choose-layout'); return; }
@@ -51,21 +56,58 @@ export default function UploadPage() {
 
   const allFilled = files.every(f => f !== null);
 
+  // ── Pure Canvas merge — mirrors capture/page.js logic ───────────────────
   const handleContinue = async () => {
-    if (!allFilled) return;
-    if (!mergeRef.current) { setError('Preview not ready, try again.'); return; }
+    if (!allFilled || !selectedLayout) return;
     setIsProcessing(true);
     setError(null);
     try {
-      await new Promise(r => setTimeout(r, 400)); // let DOM render images
-      const canvas = await html2canvas(mergeRef.current, {
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        allowTaint: true,
-        imageTimeout: 15000,
-      });
+      const { width, height, slots, image: overlayPath } = selectedLayout;
+      const SCALE = 2;
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(width  * SCALE);
+      canvas.height = Math.round(height * SCALE);
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < slots.length; i++) {
+        if (!previewUrls[i]) continue;
+        const slot = slots[i];
+        const img  = await loadImage(previewUrls[i]);
+
+        const dx = slot.left  * SCALE;
+        const dy = slot.top   * SCALE;
+        const dw = slot.width * SCALE;
+        const dh = slot.height * SCALE;
+
+        // object-fit: cover — crop from center
+        const imgRatio  = img.width / img.height;
+        const slotRatio = dw / dh;
+        let sx, sy, sw, sh;
+        if (imgRatio > slotRatio) {
+          sh = img.height; sw = sh * slotRatio;
+          sx = (img.width - sw) / 2; sy = 0;
+        } else {
+          sw = img.width; sh = sw / slotRatio;
+          sx = 0; sy = (img.height - sh) / 2;
+        }
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(dx, dy, dw, dh);
+        ctx.clip();
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        ctx.restore();
+      }
+
+      if (overlayPath) {
+        const overlay = await loadImage(overlayPath);
+        ctx.drawImage(overlay, 0, 0, canvas.width, canvas.height);
+      }
+
       const dataURL = canvas.toDataURL('image/jpeg', 0.92);
       setMergedImage(dataURL);
       setCapturedImages(previewUrls);
@@ -98,55 +140,6 @@ export default function UploadPage() {
   return (
     <div className="relative min-h-screen overflow-hidden pb-10">
       <BackgroundCircles />
-
-      {/* ── OFF-SCREEN MERGE TARGET (single mergeRef) ──────────────────── */}
-      <div
-        ref={mergeRef}
-        style={{
-          position: 'fixed',
-          top: '-9999px',
-          left: '-9999px',
-          width: `${dims.width}px`,
-          height: `${dims.height}px`,
-          backgroundColor: '#ffffff',
-          overflow: 'hidden',
-        }}
-      >
-        {selectedLayout.slots?.map((slot, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              top: `${slot.top}px`,
-              left: `${slot.left}px`,
-              width: `${slot.width}px`,
-              height: `${slot.height}px`,
-              overflow: 'hidden',
-            }}
-          >
-            {previewUrls[i] && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={previewUrls[i]}
-                alt=""
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            )}
-          </div>
-        ))}
-        {selectedLayout.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={selectedLayout.image}
-            alt=""
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%',
-              objectFit: 'contain', zIndex: 10,
-            }}
-          />
-        )}
-      </div>
 
       {/* ── VISIBLE UI ──────────────────────────────────────────────────── */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 pt-6 animate-fadeInUp">
